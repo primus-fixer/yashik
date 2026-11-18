@@ -38,6 +38,12 @@ jobs:
       - name: Интерфейс для моста (frontendDist)
         working-directory: app
         run: npm ci && npm run build
+      # Сервер IMAP для проверок почты: ящик-образец в памяти (demouser / demopass).
+      - name: Сервер IMAP pymap
+        run: |
+          python3 -m venv "$RUNNER_TEMP/pymap"
+          "$RUNNER_TEMP/pymap/bin/pip" install -q pymap==0.36.7
+          echo "YASHIK_PYMAP=$RUNNER_TEMP/pymap/bin/pymap" >> "$GITHUB_ENV"
       - run: cargo test -p yashik-core -p yashik-app
 
   frontend:

@@ -59,6 +59,9 @@ export default function App() {
   const [lockKey, setLockKey] = useState(0);
   const [pinFlow, setPinFlow] = useState<PinMode | null>(null);
   const [ready, setReady] = useState(false);
+  // Сколько ящиков подключено: от этого — что показывать в пустой папке.
+  const [accounts, setAccounts] = useState(0);
+  const [accountsRev, setAccountsRev] = useState(0);
   const [scheme, setScheme] = useState(() => stored('yashik.scheme', 'shield'));
   const [mode, setMode] = useState<ThemeMode>(() => stored('yashik.mode', 'system') as ThemeMode);
   const wide = useWide();
@@ -127,6 +130,14 @@ export default function App() {
       cloud.then((f) => f());
     };
   }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    api.accounts().then(
+      (list) => setAccounts(list.length),
+      () => undefined,
+    );
+  }, [ready, synced, accountsRev]);
 
   useEffect(() => {
     if (!toast) return;
@@ -198,18 +209,20 @@ export default function App() {
     window.setTimeout(() => document.getElementById('accounts')?.scrollIntoView({ block: 'start' }), 50);
   };
   // Новое письмо — на следующем этапе; пока ящиков нет, писать не с чего.
-  const write = () => setToast('Сначала подключите ящик: Настройки → Ящики');
+  const write = () => setToast(accounts ? 'Новое письмо появится вместе с загрузкой писем — в следующей версии' : 'Сначала подключите ящик: Настройки → Ящики');
   const showFab = !wide && route.name !== 'settings';
 
   let body;
   if (!ready) body = <p className="muted">Открываю…</p>;
   else if (route.name === 'settings')
-    body = <Settings scheme={scheme} setScheme={setScheme} mode={mode} setMode={setMode} nav={nav} security={security} onSynced={() => setSynced((n) => n + 1)} />;
+    body = (
+      <Settings scheme={scheme} setScheme={setScheme} mode={mode} setMode={setMode} nav={nav} security={security} onSynced={() => setSynced((n) => n + 1)} synced={synced} onAccounts={() => setAccountsRev((n) => n + 1)} />
+    );
   else if (route.name === 'folders') body = <Folders wide={wide} onOpen={(id) => nav.go({ name: 'folder', id })} />;
   else {
     // На телефоне все папки, кроме «Входящих», открываются из «Папок» — у них сверху «Назад».
     const back = !wide && route.id !== 'inbox' ? () => (history.length ? nav.back() : goTop({ name: 'folders' })) : undefined;
-    body = <Folder key={route.id} id={route.id} synced={synced} onConnect={connect} onBack={back} />;
+    body = <Folder key={route.id} id={route.id} synced={synced} accounts={accounts} onConnect={connect} onBack={back} />;
   }
 
   return (

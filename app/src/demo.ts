@@ -1,6 +1,7 @@
 // Демо в браузере (`npm run dev`): те же команды, что у приложения, но в памяти — для разработки экранов
 // без Tauri. Связи по Wi-Fi и облака здесь нет: разделы показывают, как они выглядят.
-import type { Api, LockStatus } from './api';
+import type { AccountView, Api, LockStatus } from './api';
+import { providerOf } from './providers';
 import type { CloudStatus, LanView } from '@primus-fixer/kit/ui';
 
 let pin: string | null = null;
@@ -47,6 +48,10 @@ const CLOUD_OFF: CloudStatus = {
   notice: null,
 };
 let cloud: CloudStatus = { ...CLOUD_OFF };
+
+// Ящики: в демо вход «проверяется» без сети; пароль «wrong» — как будто сервер не пустил.
+let accounts: AccountView[] = [];
+const TITLES = { yandex: 'Яндекс', gmail: 'Gmail', mailru: 'Mail.ru', other: 'Другая почта' } as const;
 
 const now = () => Math.floor(Date.now() / 1000);
 const noSync = () => Promise.reject(new Error('В демо в браузере связи с другими устройствами нет'));
@@ -125,4 +130,21 @@ export const demo: Api = {
   },
   onCloud: quiet,
   about: async () => ({ version: __APP_VERSION__, key_method: 'demo', device: 'демо', records: 0 }),
+  accounts: async () => [...accounts],
+  accountAdd: async (input) => {
+    const email = input.email.trim();
+    const id = email.toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw 'Похоже, в адресе ошибка: нужен вид имя@домен.ru';
+    if (accounts.some((a) => a.id === id)) throw `${email} уже подключён`;
+    if (input.password.trim() === 'wrong') throw 'Сервер не пустил: неверный пароль приложения (демо).';
+    const provider = input.provider ?? providerOf(email);
+    const imap = { yandex: 'imap.yandex.ru', gmail: 'imap.gmail.com', mailru: 'imap.mail.ru', other: input.imap.trim() || 'imap.example.ru' }[provider];
+    const account: AccountView = { id, email, name: input.name.trim(), provider, title: TITLES[provider], imap };
+    accounts = [...accounts, account];
+    return { account, folders: 7 };
+  },
+  accountRemove: async (id) => {
+    accounts = accounts.filter((a) => a.id !== id);
+  },
+  mailPage: async () => undefined,
 };

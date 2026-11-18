@@ -10,6 +10,10 @@ use std::path::Path;
 
 pub use kit_core::store::{Event, EventBody, Store};
 
+/// Ящики: адрес, сервер, вход.
+pub mod account;
+/// IMAP: вход в ящик и его папки.
+pub mod imap;
 /// Поиск по почте: словоформы, транслит, раскладка.
 pub mod search;
 

@@ -12,3 +12,17 @@ kit-core = { git = "https://github.com/primus-fixer/kit", rev = "8fe923477d34668
 getrandom = "0.3"
 # Основы слов для поиска (Snowball: русский и английский).
 rust-stemmers = "1.2"
+# Почта: IMAP поверх TLS (rustls с ring, корни Mozilla — одинаково на Windows и Android).
+async-imap = { version = "0.12", default-features = false, features = ["runtime-tokio"] }
+tokio = { version = "1", features = ["net", "time", "rt", "macros", "io-util"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12", "logging"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+webpki-roots = "1"
+futures = "0.3"
+base64 = "0.22"
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+# Проверка TLS: свой сертификат для сервера в тесте.
+rcgen = { version = "0.14", default-features = false, features = ["ring", "pem"] }
+serde_json = "1"
