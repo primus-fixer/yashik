@@ -18,6 +18,10 @@ type Props = {
   security: Security;
   /** Пришли записи с другого устройства — перечитать. */
   onSynced: () => void;
+  /** Счётчик обновлений с других устройств: разделы перечитывают данные. */
+  synced: number;
+  /** Ящики подключили или отключили. */
+  onAccounts: () => void;
 };
 
 const METHOD: Record<string, string> = {
@@ -28,7 +32,7 @@ const METHOD: Record<string, string> = {
 };
 
 /** Настройки — один экран из разделов под катом. */
-export default function Settings({ scheme, setScheme, mode, setMode, nav, security, onSynced }: Props) {
+export default function Settings({ scheme, setScheme, mode, setMode, nav, security, onSynced, synced, onAccounts }: Props) {
   const [about, setAbout] = useState<About | null>(null);
   const dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
@@ -41,7 +45,7 @@ export default function Settings({ scheme, setScheme, mode, setMode, nav, securi
     <div className="stack settings">
       <h1 className="screen-title">Настройки</h1>
 
-      <AccountsSection />
+      <AccountsSection onChange={onAccounts} toast={nav.toast} synced={synced} />
 
       <Cut id="look" title="Вид" hint={`${SCHEMES[scheme]?.name ?? ''}, ${mode === 'dark' ? 'тёмная' : mode === 'light' ? 'светлая' : 'как в системе'}`}>
         <div className="schemes" role="group" aria-label="Расцветка">

@@ -11,6 +11,15 @@ export const inApp = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in w
 /** О приложении — для экрана настроек. */
 export type About = { version: string; key_method: string; device: string; records: number };
 
+/** Почтовая служба ящика. */
+export type Provider = 'yandex' | 'gmail' | 'mailru' | 'other';
+
+/** Подключённый ящик (без пароля). */
+export type AccountView = { id: string; email: string; name: string; provider: Provider; title: string; imap: string };
+
+/** Новый ящик: для «другой» почты — ещё серверы IMAP и SMTP. */
+export type NewAccount = { email: string; password: string; name: string; provider: Provider; imap: string; smtp: string };
+
 const call = async <T,>(cmd: string, args?: Record<string, unknown>) => (await import('@tauri-apps/api/core')).invoke<T>(cmd, args);
 
 const real = {
@@ -20,6 +29,11 @@ const real = {
   ...wifiCommands(),
   ...cloudCommands(),
   about: () => call<About>('about'),
+  // Ящики.
+  accounts: () => call<AccountView[]>('accounts'),
+  accountAdd: (input: NewAccount) => call<{ account: AccountView; folders: number }>('account_add', { input }),
+  accountRemove: (id: string) => call<void>('account_remove', { id }),
+  mailPage: (provider: Provider, page: 'password' | 'settings') => call<void>('mail_page', { provider, page }),
 };
 
 export type Api = typeof real;

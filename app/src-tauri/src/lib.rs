@@ -12,6 +12,7 @@ use tauri::{Manager, State};
 
 mod cloud;
 mod lan;
+mod mail;
 mod names;
 
 use kit_tauri::guard::{self, Lock};
@@ -219,6 +220,10 @@ pub fn run() {
             cloud::cloud_sync_now,
             cloud::cloud_every,
             cloud::cloud_disconnect,
+            mail::accounts,
+            mail::account_add,
+            mail::account_remove,
+            mail::mail_page,
             about,
         ])
         .run(tauri::generate_context!())
