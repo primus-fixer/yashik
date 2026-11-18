@@ -16,7 +16,7 @@ use tokio::net::TcpStream;
 use tokio_rustls::client::TlsStream;
 
 /// Сколько ждать сервер на каждом шаге: соединение, приветствие, вход, список папок.
-const WAIT: Duration = Duration::from_secs(20);
+pub(crate) const WAIT: Duration = Duration::from_secs(20);
 
 /// Назначение папки — из ответа сервера (SPECIAL-USE) или, если сервер его не сообщает, по названию.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
@@ -95,14 +95,14 @@ async fn check_with(account: &Account, servers: &[Server], roots: Arc<rustls::Ro
     Err(last)
 }
 
-fn mozilla_roots() -> Arc<rustls::RootCertStore> {
+pub(crate) fn mozilla_roots() -> Arc<rustls::RootCertStore> {
     let mut roots = rustls::RootCertStore::empty();
     roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
     Arc::new(roots)
 }
 
 /// Шаг с ожиданием: не дождались — нет связи.
-async fn timed<T, E>(server: &Server, step: impl Future<Output = Result<T, E>>, err: impl FnOnce(E) -> Error) -> Result<T, Error> {
+pub(crate) async fn timed<T, E>(server: &Server, step: impl Future<Output = Result<T, E>>, err: impl FnOnce(E) -> Error) -> Result<T, Error> {
     match tokio::time::timeout(WAIT, step).await {
         Ok(r) => r.map_err(err),
         Err(_) => Err(Error::Network(format!("{} не отвечает {} секунд — проверьте интернет.", server.host, WAIT.as_secs()))),
@@ -110,7 +110,7 @@ async fn timed<T, E>(server: &Server, step: impl Future<Output = Result<T, E>>, 
 }
 
 /// Соединение с проверкой сертификата.
-async fn connect(server: &Server, roots: Arc<rustls::RootCertStore>) -> Result<Client<TlsStream<TcpStream>>, Error> {
+pub(crate) async fn connect(server: &Server, roots: Arc<rustls::RootCertStore>) -> Result<Client<TlsStream<TcpStream>>, Error> {
     let config = rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
         .with_safe_default_protocol_versions()
         .map_err(|e| Error::Other(format!("шифрование: {e}")))?
@@ -137,7 +137,7 @@ fn tls_error(server: &Server, e: std::io::Error) -> Error {
 }
 
 /// Приветствие сервера и вход по паролю приложения.
-async fn login<S: AsyncRead + AsyncWrite + Unpin + Debug + Send>(mut client: Client<S>, account: &Account, server: &Server) -> Result<Session<S>, Error> {
+pub(crate) async fn login<S: AsyncRead + AsyncWrite + Unpin + Debug + Send>(mut client: Client<S>, account: &Account, server: &Server) -> Result<Session<S>, Error> {
     let lost = || Error::Network(format!("{} закрыл соединение.", server.host));
     timed(server, client.read_response(), |e| Error::Network(format!("{}: {e}", server.host))).await?.ok_or_else(lost)?;
     match tokio::time::timeout(WAIT, client.login(&account.login, &account.password)).await {
@@ -153,7 +153,7 @@ async fn login<S: AsyncRead + AsyncWrite + Unpin + Debug + Send>(mut client: Cli
 }
 
 /// Все папки: сначала «Входящие», «Отправленные», «Черновики», «Спам», «Корзина», потом остальные по алфавиту.
-async fn list_folders<S: AsyncRead + AsyncWrite + Unpin + Debug + Send>(session: &mut Session<S>, server: &Server) -> Result<Vec<Folder>, Error> {
+pub(crate) async fn list_folders<S: AsyncRead + AsyncWrite + Unpin + Debug + Send>(session: &mut Session<S>, server: &Server) -> Result<Vec<Folder>, Error> {
     let names = timed(
         server,
         async { session.list(Some(""), Some("*")).await?.try_collect::<Vec<_>>().await },
@@ -234,7 +234,7 @@ pub fn decode_utf7(s: &str) -> String {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use crate::account::Provider;
     use std::net::TcpListener;
@@ -265,9 +265,9 @@ mod tests {
 
     /// Сервер IMAP для проверок: pymap (`pip install pymap`) с ящиком-образцом в памяти —
     /// demouser / demopass, папки INBOX, Sent, Trash. Путь к программе — в YASHIK_PYMAP; нет — проверки пропускаются.
-    struct Pymap {
+    pub(crate) struct Pymap {
         child: Child,
-        port: u16,
+        pub(crate) port: u16,
     }
 
     impl Drop for Pymap {
@@ -281,7 +281,7 @@ mod tests {
         TcpListener::bind("127.0.0.1:0").unwrap().local_addr().unwrap().port()
     }
 
-    fn pymap() -> Option<Pymap> {
+    pub(crate) fn pymap() -> Option<Pymap> {
         let Ok(bin) = std::env::var("YASHIK_PYMAP") else {
             eprintln!("YASHIK_PYMAP не задан — проверка с настоящим сервером IMAP пропущена");
             return None;
@@ -298,7 +298,7 @@ mod tests {
         panic!("pymap не открыл порт {port}");
     }
 
-    fn demo(password: &str, server: Server) -> Account {
+    pub(crate) fn demo(password: &str, server: Server) -> Account {
         Account {
             email: "demouser@example.com".into(),
             name: String::new(),
@@ -310,7 +310,7 @@ mod tests {
         }
     }
 
-    fn rt() -> tokio::runtime::Runtime {
+    pub(crate) fn rt() -> tokio::runtime::Runtime {
         tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap()
     }
 

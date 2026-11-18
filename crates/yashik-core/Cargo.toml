@@ -21,6 +21,10 @@ webpki-roots = "1"
 futures = "0.3"
 base64 = "0.22"
 serde = { version = "1", features = ["derive"] }
+# Разбор писем: заголовки в RFC 2047, старые кодировки (KOI8-R, windows-1251), MIME.
+mail-parser = { version = "0.11", features = ["full_encoding"] }
+# Свои таблицы писем в базе kit (та же библиотека и версия, что у kit-core).
+rusqlite = { version = "0.42", default-features = false }
 
 [dev-dependencies]
 # Проверка TLS: свой сертификат для сервера в тесте.

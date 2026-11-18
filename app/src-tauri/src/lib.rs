@@ -185,8 +185,10 @@ pub fn run() {
             app.manage(cloud::Sky::new(cloud::settings(), store.clone(), None));
             app.manage(lan::Wifi::new(&yashik_core::LAN, &names::KEYS, store.clone(), me.id.clone(), device_name()));
             app.manage(AppState { store, guard });
+            app.manage(mail::Mail::new());
             lan::start(app.handle().clone());
             cloud::start(app.handle().clone());
+            mail::start(app.handle().clone());
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -224,6 +226,10 @@ pub fn run() {
             mail::account_add,
             mail::account_remove,
             mail::mail_page,
+            mail::mail_status,
+            mail::mail_sync_now,
+            mail::messages,
+            mail::unread,
             about,
         ])
         .run(tauri::generate_context!())

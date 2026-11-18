@@ -23,3 +23,85 @@
   font: inherit;
   text-align: left;
 }
+
+/* Непрочитанные в меню слева — справа от названия папки. */
+
+.navcount {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--ink2);
+}
+
+/* Ход загрузки писем под полем поиска. */
+
+.mail-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+  margin: 0;
+}
+
+/* Список писем: строки 64 — точка «не прочитано», от кого и тема, дата и значки. */
+
+.mail-list {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--line);
+}
+
+.mail-row {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 8px 4px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+
+.mail-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.mail-row.unread .mail-dot {
+  background: var(--own);
+}
+
+.mail-row .lines .title {
+  font-weight: 400;
+}
+
+.mail-row.unread .lines .title {
+  font-weight: 600;
+}
+
+.mail-row.unread .lines .sub {
+  color: var(--ink);
+}
+
+.mail-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink2);
+  white-space: nowrap;
+}
+
+.mail-icons {
+  display: flex;
+  gap: 4px;
+  min-height: 14px;
+  color: var(--ink3);
+}

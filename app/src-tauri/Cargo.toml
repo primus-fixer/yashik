@@ -17,13 +17,15 @@ tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 getrandom = "0.3"
+# Загрузка писем в фоне: раз в 5 минут или по кнопке.
+tokio = { version = "1", features = ["sync", "time", "macros"] }
 yashik-core = { path = "../../crates/yashik-core" }
 # Общий модуль kit 0.12.1 (https://github.com/primus-fixer/kit): ключ базы в хранилище системы,
 # вход по PIN-коду, обмен по Wi-Fi и облако в приложении.
 kit-core = { git = "https://github.com/primus-fixer/kit", rev = "8fe923477d34668bbcb09a5c3355457332e78a18" }
 kit-secure = { git = "https://github.com/primus-fixer/kit", rev = "8fe923477d34668bbcb09a5c3355457332e78a18" }
 kit-tauri = { git = "https://github.com/primus-fixer/kit", rev = "8fe923477d34668bbcb09a5c3355457332e78a18" }
-# Облако: страница Яндекс ID, где создают пароль приложения, открывается в браузере.
+# Страницы почтовых служб и Яндекс ID (пароли приложений) открываются в браузере.
 tauri-plugin-opener = "2"
 
 [target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]

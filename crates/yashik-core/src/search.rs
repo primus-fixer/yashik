@@ -562,7 +562,7 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let store = crate::open(&dir.join("yashik.db"), &[7u8; 32], "aaaa").unwrap();
         let db = store.conn();
-        db.execute_batch("CREATE VIRTUAL TABLE mail_fts USING fts5(terms, tokenize = 'ascii')").unwrap();
+        db.execute_batch("CREATE VIRTUAL TABLE probe_fts USING fts5(terms, tokenize = 'ascii')").unwrap();
         let letters = [
             (1, "Отчёт за ноябрь"),
             (2, "Otchety za dekabr. Shchukin"),
@@ -570,11 +570,11 @@ mod tests {
             (4, "Счёт на оплату №2025-114"),
         ];
         for (id, text) in letters {
-            db.execute("INSERT INTO mail_fts(rowid, terms) VALUES (?1, ?2)", (id, index_text(text))).unwrap();
+            db.execute("INSERT INTO probe_fts(rowid, terms) VALUES (?1, ?2)", (id, index_text(text))).unwrap();
         }
         let find = |query: &str| -> Vec<i64> {
             let Some(expr) = Query::parse(query).fts() else { return Vec::new() };
-            let mut st = db.prepare("SELECT rowid FROM mail_fts WHERE mail_fts MATCH ?1 ORDER BY rowid").unwrap();
+            let mut st = db.prepare("SELECT rowid FROM probe_fts WHERE probe_fts MATCH ?1 ORDER BY rowid").unwrap();
             st.query_map([expr], |r| r.get(0)).unwrap().map(Result::unwrap).collect()
         };
         assert_eq!(find("отчёты"), [1, 2]);

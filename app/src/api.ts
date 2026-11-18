@@ -20,6 +20,34 @@ export type AccountView = { id: string; email: string; name: string; provider: P
 /** Новый ящик: для «другой» почты — ещё серверы IMAP и SMTP. */
 export type NewAccount = { email: string; password: string; name: string; provider: Provider; imap: string; smtp: string };
 
+/** Строка списка писем: в «Отправленных» и «Черновиках» who — кому, в остальных — от кого. */
+export type MessageRow = {
+  id: number;
+  account: string;
+  folder: string;
+  uid: number;
+  date: number;
+  who: string;
+  subject: string;
+  flags: { seen: boolean; flagged: boolean; answered: boolean };
+  attachments: boolean;
+};
+
+/** Страница писем; switched — запрос в другой раскладке, если нашлось только по нему. */
+export type MessagePage = { rows: MessageRow[]; switched: string | null };
+
+/** Где искать письма: общая папка всех ящиков или папка одного ящика. */
+export type Place = { kind: 'role'; role: string } | { kind: 'folder'; account: string; name: string };
+
+/** Загрузка писем — приходит и событием «mail». */
+export type MailStatus = {
+  running: boolean;
+  progress: { account: string; folder: string; done: number; total: number } | null;
+  last: number | null;
+  new: number;
+  errors: [string, string][];
+};
+
 const call = async <T,>(cmd: string, args?: Record<string, unknown>) => (await import('@tauri-apps/api/core')).invoke<T>(cmd, args);
 
 const real = {
@@ -34,6 +62,12 @@ const real = {
   accountAdd: (input: NewAccount) => call<{ account: AccountView; folders: number }>('account_add', { input }),
   accountRemove: (id: string) => call<void>('account_remove', { id }),
   mailPage: (provider: Provider, page: 'password' | 'settings') => call<void>('mail_page', { provider, page }),
+  // Письма.
+  messages: (place: Place, query: string, before: [number, number] | null) => call<MessagePage>('messages', { place, query, before }),
+  unread: () => call<Record<string, number>>('unread'),
+  mailStatus: () => call<MailStatus>('mail_status'),
+  mailSyncNow: () => call<void>('mail_sync_now'),
+  onMail: async (listener: (st: MailStatus) => void) => (await import('@tauri-apps/api/event')).listen<MailStatus>('mail', (ev) => listener(ev.payload)),
 };
 
 export type Api = typeof real;

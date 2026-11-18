@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LockScreen, PinFlow, applyTheme, store, stored, type PinMode, type ThemeMode } from '@primus-fixer/kit/ui';
-import { api, LOCKED, message, type LockStatus } from './api';
+import { api, LOCKED, message, type LockStatus, type MailStatus } from './api';
 import { Icon, NAME, NAME_ACC } from './ui';
 import { FOLDERS, type FolderId } from './folders';
 import Folder from './screens/Folder';
@@ -62,6 +62,10 @@ export default function App() {
   // Сколько ящиков подключено: от этого — что показывать в пустой папке.
   const [accounts, setAccounts] = useState(0);
   const [accountsRev, setAccountsRev] = useState(0);
+  // Загрузка писем: состояние и счётчик её событий (по нему списки перечитываются), непрочитанные по папкам.
+  const [mail, setMail] = useState<MailStatus | null>(null);
+  const [mailRev, setMailRev] = useState(0);
+  const [unread, setUnread] = useState<Record<string, number>>({});
   const [scheme, setScheme] = useState(() => stored('yashik.scheme', 'shield'));
   const [mode, setMode] = useState<ThemeMode>(() => stored('yashik.mode', 'system') as ThemeMode);
   const wide = useWide();
@@ -109,6 +113,7 @@ export default function App() {
         (st) => {
           setLock(st);
           if (st.locked && visible) goLocked();
+          else if (visible) api.mailSyncNow().catch(() => undefined);
         },
         () => undefined,
       );
@@ -139,6 +144,26 @@ export default function App() {
     );
   }, [ready, synced, accountsRev]);
 
+  // Письма загружаются в фоне: события «mail» — ход загрузки и её конец.
+  useEffect(() => {
+    if (!ready) return;
+    api.mailStatus().then(setMail, () => undefined);
+    const un = api
+      .onMail((st) => {
+        setMail(st);
+        setMailRev((n) => n + 1);
+      })
+      .catch(() => () => undefined);
+    return () => {
+      un.then((f) => f());
+    };
+  }, [ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    api.unread().then(setUnread, () => undefined);
+  }, [ready, synced, accountsRev, mailRev]);
+
   useEffect(() => {
     if (!toast) return;
     const id = window.setTimeout(() => showToast(null), 4500);
@@ -150,6 +175,8 @@ export default function App() {
     lockedRef.current = false;
     setLocked(false);
     setReady(true);
+    // Пока было заблокировано, письма не загружались.
+    api.mailSyncNow().catch(() => undefined);
     if (st.recovery) setPinFlow('reset');
   }, []);
 
@@ -222,7 +249,7 @@ export default function App() {
   else {
     // На телефоне все папки, кроме «Входящих», открываются из «Папок» — у них сверху «Назад».
     const back = !wide && route.id !== 'inbox' ? () => (history.length ? nav.back() : goTop({ name: 'folders' })) : undefined;
-    body = <Folder key={route.id} id={route.id} synced={synced} accounts={accounts} onConnect={connect} onBack={back} />;
+    body = <Folder key={route.id} id={route.id} synced={synced} accounts={accounts} mail={mail} mailRev={mailRev} onConnect={connect} onBack={back} toast={setToast} />;
   }
 
   return (
@@ -236,10 +263,14 @@ export default function App() {
           </button>
           {MENU.map((m) => {
             const on = same(route, m.route);
+            // Непрочитанные — у «Входящих» и «Спама».
+            const role = m.route.name === 'folder' ? FOLDERS.find((f) => f.id === (m.route as { id: FolderId }).id)?.role : undefined;
+            const count = role === 'inbox' || role === 'junk' ? unread[role] ?? 0 : 0;
             return (
               <button key={m.label} type="button" className={`navitem${on ? ' on' : ''}`} aria-current={on ? 'page' : undefined} onClick={() => goTop(m.route)}>
                 <Icon name={m.icon} />
                 <span>{m.label}</span>
+                {count > 0 && <span className="navcount num">{count > 999 ? '999+' : count}</span>}
               </button>
             );
           })}

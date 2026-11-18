@@ -14,6 +14,10 @@ pub use kit_core::store::{Event, EventBody, Store};
 pub mod account;
 /// IMAP: вход в ящик и его папки.
 pub mod imap;
+/// Письма в базе: папки, заголовки, указатель поиска.
+pub mod maildb;
+/// Загрузка ящика с сервера.
+pub mod mailsync;
 /// Поиск по почте: словоформы, транслит, раскладка.
 pub mod search;
 
@@ -66,12 +70,15 @@ pub static CLOUD: kit_core::cloud::Format = kit_core::cloud::Format {
 /// Пароль копий нужен и облаку: из него выводится ключ облака.
 pub const BACKUP: kit_core::backup::Format = kit_core::backup::Format { magic: b"YASHIKBK", ext: "yashik", names: NAMES, common: &["yashik", "ящик"], records: &[] };
 
-/// Открывает зашифрованную базу «Ящика». `device` — номер этого устройства.
+/// Открывает зашифрованную базу «Ящика». `device` — номер этого устройства. Таблицы писем ([`maildb`])
+/// создаются при первом открытии.
 pub fn open(path: &Path, key: &[u8; 32], device: &str) -> Result<Store, String> {
-    Store::open(path, key, device, &BLOBS).map_err(|e| match e {
+    let store = Store::open(path, key, device, &BLOBS).map_err(|e| match e {
         kit_core::db::Open::WrongKey => "ключ не подходит к базе — восстановите файл key.sec или резервную копию".to_string(),
         kit_core::db::Open::Db(e) => format!("база не открылась: {e}"),
-    })
+    })?;
+    maildb::migrate(store.conn()).map_err(|e| format!("таблицы писем: {e}"))?;
+    Ok(store)
 }
 
 /// Новый номер записи или устройства: 16 шестнадцатеричных знаков.
