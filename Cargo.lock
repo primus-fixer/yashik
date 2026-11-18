@@ -2168,8 +2168,8 @@ dependencies = [
 
 [[package]]
 name = "kit-cloud"
-version = "0.12.0"
-source = "git+https://github.com/primus-fixer/kit?rev=50713b7a11d54fb74403666eb6cf63c13e7df514#50713b7a11d54fb74403666eb6cf63c13e7df514"
+version = "0.12.1"
+source = "git+https://github.com/primus-fixer/kit?rev=8fe923477d34668bbcb09a5c3355457332e78a18#8fe923477d34668bbcb09a5c3355457332e78a18"
 dependencies = [
  "base64 0.22.1",
  "kit-core",
@@ -2180,8 +2180,8 @@ dependencies = [
 
 [[package]]
 name = "kit-core"
-version = "0.12.0"
-source = "git+https://github.com/primus-fixer/kit?rev=50713b7a11d54fb74403666eb6cf63c13e7df514#50713b7a11d54fb74403666eb6cf63c13e7df514"
+version = "0.12.1"
+source = "git+https://github.com/primus-fixer/kit?rev=8fe923477d34668bbcb09a5c3355457332e78a18#8fe923477d34668bbcb09a5c3355457332e78a18"
 dependencies = [
  "argon2",
  "base64 0.22.1",
@@ -2200,8 +2200,8 @@ dependencies = [
 
 [[package]]
 name = "kit-secure"
-version = "0.12.0"
-source = "git+https://github.com/primus-fixer/kit?rev=50713b7a11d54fb74403666eb6cf63c13e7df514#50713b7a11d54fb74403666eb6cf63c13e7df514"
+version = "0.12.1"
+source = "git+https://github.com/primus-fixer/kit?rev=8fe923477d34668bbcb09a5c3355457332e78a18#8fe923477d34668bbcb09a5c3355457332e78a18"
 dependencies = [
  "jni",
  "ndk-context",
@@ -2212,8 +2212,8 @@ dependencies = [
 
 [[package]]
 name = "kit-tauri"
-version = "0.12.0"
-source = "git+https://github.com/primus-fixer/kit?rev=50713b7a11d54fb74403666eb6cf63c13e7df514#50713b7a11d54fb74403666eb6cf63c13e7df514"
+version = "0.12.1"
+source = "git+https://github.com/primus-fixer/kit?rev=8fe923477d34668bbcb09a5c3355457332e78a18#8fe923477d34668bbcb09a5c3355457332e78a18"
 dependencies = [
  "base64 0.22.1",
  "if-addrs",
@@ -3318,6 +3318,16 @@ dependencies = [
  "libsqlite3-sys",
  "smallvec",
  "sqlite-wasm-rs",
+]
+
+[[package]]
+name = "rust-stemmers"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e46a2036019fdb888131db7a4c847a1063a7493f971ed94ea82c67eada63ca54"
+dependencies = [
+ "serde",
+ "serde_derive",
 ]
 
 [[package]]
@@ -5525,6 +5535,7 @@ version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "kit-core",
+ "rust-stemmers",
 ]
 
 [[package]]

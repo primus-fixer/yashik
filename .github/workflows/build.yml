@@ -22,13 +22,13 @@ concurrency:
 jobs:
   # Установщик для Windows и APK для Android собирают общие сценарии kit (https://github.com/primus-fixer/kit).
   windows:
-    uses: primus-fixer/kit/.github/workflows/windows.yml@50713b7a11d54fb74403666eb6cf63c13e7df514 # kit 0.12.0
+    uses: primus-fixer/kit/.github/workflows/windows.yml@8fe923477d34668bbcb09a5c3355457332e78a18 # kit 0.12.1
   android:
-    uses: primus-fixer/kit/.github/workflows/android.yml@50713b7a11d54fb74403666eb6cf63c13e7df514 # kit 0.12.0
+    uses: primus-fixer/kit/.github/workflows/android.yml@8fe923477d34668bbcb09a5c3355457332e78a18 # kit 0.12.1
     with:
       title: Ящик
       key-alias: yashik
-      kit-ref: 50713b7a11d54fb74403666eb6cf63c13e7df514
+      kit-ref: 8fe923477d34668bbcb09a5c3355457332e78a18
     secrets:
       ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
