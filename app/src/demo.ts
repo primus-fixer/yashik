@@ -1,6 +1,6 @@
 // Демо в браузере (`npm run dev`): те же команды, что у приложения, но в памяти — для разработки экранов
 // без Tauri. Связи по Wi-Fi и облака здесь нет: разделы показывают, как они выглядят.
-import type { AccountView, Api, LockStatus } from './api';
+import type { AccountView, Api, LockStatus, MessageRow } from './api';
 import { providerOf } from './providers';
 import type { CloudStatus, LanView } from '@primus-fixer/kit/ui';
 
@@ -51,6 +51,32 @@ let cloud: CloudStatus = { ...CLOUD_OFF };
 
 // Ящики: в демо вход «проверяется» без сети; пароль «wrong» — как будто сервер не пустил.
 let accounts: AccountView[] = [];
+
+// Письма-образцы для экранов: появляются, когда подключён хотя бы один ящик.
+const SAMPLE: [string, string, string, number, boolean, boolean][] = [
+  ['inbox', 'Андрей Щукин', 'Отчёт за ноябрь', 0.1, false, true],
+  ['inbox', 'Юлия Петрова', 'Встреча в пятницу переносится', 3, false, false],
+  ['inbox', 'Яндекс 360', 'Безопасность аккаунта: новый вход', 26, true, false],
+  ['inbox', 'Ozon', 'Ваш заказ доставлен', 50, true, false],
+  ['inbox', 'Сергей', 'Re: Фотографии с дачи', 120, true, true],
+  ['sent', 'Андрей Щукин', 'Re: Отчёт за октябрь', 30, true, false],
+  ['drafts', 'Юлия Петрова', 'Список на субботу', 5, true, false],
+  ['junk', 'Lottery Winner', 'Вы выиграли миллион!', 70, false, false],
+];
+const sample = (): MessageRow[] =>
+  accounts.length
+    ? SAMPLE.map(([role, who, subject, hours, seen, attachments], i) => ({
+        id: i + 1,
+        account: accounts[0].id,
+        folder: role,
+        uid: i + 1,
+        date: Math.floor(Date.now() / 1000 - hours * 3600),
+        who,
+        subject,
+        flags: { seen, flagged: false, answered: false },
+        attachments,
+      }))
+    : [];
 const TITLES = { yandex: 'Яндекс', gmail: 'Gmail', mailru: 'Mail.ru', other: 'Другая почта' } as const;
 
 const now = () => Math.floor(Date.now() / 1000);
@@ -147,4 +173,18 @@ export const demo: Api = {
     accounts = accounts.filter((a) => a.id !== id);
   },
   mailPage: async () => undefined,
+  messages: async (place, query) => {
+    const role = place.kind === 'role' ? place.role : '';
+    const q = query.trim().toLowerCase();
+    const rows = sample().filter((r) => r.folder === role && (!q || `${r.who} ${r.subject}`.toLowerCase().includes(q)));
+    return { rows, switched: null };
+  },
+  unread: async () => {
+    const out: Record<string, number> = {};
+    for (const r of sample()) if (!r.flags.seen) out[r.folder] = (out[r.folder] ?? 0) + 1;
+    return out;
+  },
+  mailStatus: async () => ({ running: false, progress: null, last: now(), new: 0, errors: [] }),
+  mailSyncNow: async () => undefined,
+  onMail: quiet,
 };
