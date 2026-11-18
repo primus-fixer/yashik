@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = ["crates/yashik-core", "app/src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[profile.release]
+strip = true
+
+# Шифрование базы в отладочной сборке иначе заметно тормозит.
+[profile.dev.package.sha2]
+opt-level = 3
+
+# PIN-код в отладочной сборке иначе считается по секунде.
+[profile.dev.package.argon2]
+opt-level = 3
+
+[profile.dev.package.blake2]
+opt-level = 3

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Yashik",
+  "mainBinaryName": "yashik",
+  "version": "0.1.0",
+  "identifier": "io.github.primusfixer.yashik",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Ящик",
+        "width": 1100,
+        "height": 780,
+        "minWidth": 380,
+        "minHeight": 600,
+        "decorations": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' ipc: http://ipc.localhost; script-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "shortDescription": "Ящик — почта: все ящики в одном месте",
+    "longDescription": "Ящик — почта: все ящики в одном месте",
+    "copyright": "primus-fixer",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "languages": [
+          "Russian",
+          "English"
+        ],
+        "displayLanguageSelector": false
+      }
+    }
+  }
+}
