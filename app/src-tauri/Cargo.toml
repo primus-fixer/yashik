@@ -1,0 +1,37 @@
+[package]
+name = "yashik-app"
+description = "Ящик — почта: все ящики в одном месте"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[lib]
+name = "yashik_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+getrandom = "0.3"
+yashik-core = { path = "../../crates/yashik-core" }
+# Общий модуль kit 0.12.0 (https://github.com/primus-fixer/kit): ключ базы в хранилище системы,
+# вход по PIN-коду, обмен по Wi-Fi и облако в приложении.
+kit-core = { git = "https://github.com/primus-fixer/kit", rev = "50713b7a11d54fb74403666eb6cf63c13e7df514" }
+kit-secure = { git = "https://github.com/primus-fixer/kit", rev = "50713b7a11d54fb74403666eb6cf63c13e7df514" }
+kit-tauri = { git = "https://github.com/primus-fixer/kit", rev = "50713b7a11d54fb74403666eb6cf63c13e7df514" }
+# Облако: страница Яндекс ID, где создают пароль приложения, открывается в браузере.
+tauri-plugin-opener = "2"
+
+[target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
+# Вход по отпечатку.
+tauri-plugin-biometric = "2"
+# QR-код связи по Wi-Fi — камерой телефона.
+tauri-plugin-barcode-scanner = "2"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+# Второй запуск открывает уже работающее окно.
+tauri-plugin-single-instance = "2"

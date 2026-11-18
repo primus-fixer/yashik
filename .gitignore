@@ -1,0 +1,13 @@
+/target
+node_modules
+/app/dist
+/app/src-tauri/target
+/app/src-tauri/gen/schemas
+*.db
+*.db-wal
+*.db-shm
+
+# Ключи подписи и секреты — только вне репозитория
+*.jks
+*.keystore
+*-secrets.txt

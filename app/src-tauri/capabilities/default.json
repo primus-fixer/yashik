@@ -1,0 +1,11 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Права главного окна: только события ядра. Команды приложения — свои, через ядро.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:event:default"
+  ]
+}
