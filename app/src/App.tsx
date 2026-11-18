@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LockScreen, PinFlow, applyTheme, store, stored, type PinMode, type ThemeMode } from '@primus-fixer/kit/ui';
 import { api, LOCKED, message, type LockStatus } from './api';
 import { Icon, NAME, NAME_ACC } from './ui';
+import { FOLDERS, type FolderId } from './folders';
+import Folder from './screens/Folder';
 import Folders from './screens/Folders';
-import Inbox from './screens/Inbox';
-import Search from './screens/Search';
 import Settings from './screens/Settings';
 
-export type Route = { name: 'inbox' } | { name: 'folders' } | { name: 'search' } | { name: 'settings' };
+export type Route = { name: 'folder'; id: FolderId } | { name: 'folders' } | { name: 'settings' };
 
 export type Nav = {
   go: (r: Route) => void;
@@ -15,13 +15,24 @@ export type Nav = {
   toast: (text: string) => void;
 };
 
-/** Разделы: на телефоне — нижняя панель, на компьютере — меню слева. */
-const TABS: { id: Route['name']; label: string; icon: string }[] = [
-  { id: 'inbox', label: 'Входящие', icon: 'inbox' },
-  { id: 'folders', label: 'Папки', icon: 'folder' },
-  { id: 'search', label: 'Поиск', icon: 'search' },
-  { id: 'settings', label: 'Настройки', icon: 'settings' },
+const INBOX: Route = { name: 'folder', id: 'inbox' };
+
+/** Меню слева на компьютере: общие папки, свои папки ящиков, настройки. */
+const MENU: { route: Route; label: string; icon: string }[] = [
+  ...FOLDERS.map((f) => ({ route: { name: 'folder', id: f.id } as Route, label: f.label, icon: f.icon })),
+  { route: { name: 'folders' }, label: 'Папки', icon: 'folder' },
+  { route: { name: 'settings' }, label: 'Настройки', icon: 'settings' },
 ];
+
+/** Нижняя панель на телефоне: «Входящие», «Папки» (там остальные папки), «Настройки». */
+type Tab = 'inbox' | 'folders' | 'settings';
+const TABS: { id: Tab; route: Route; label: string; icon: string }[] = [
+  { id: 'inbox', route: INBOX, label: 'Входящие', icon: 'inbox' },
+  { id: 'folders', route: { name: 'folders' }, label: 'Папки', icon: 'folder' },
+  { id: 'settings', route: { name: 'settings' }, label: 'Настройки', icon: 'settings' },
+];
+const tabOf = (r: Route): Tab => (r.name === 'folder' ? (r.id === 'inbox' ? 'inbox' : 'folders') : r.name);
+const same = (a: Route, b: Route) => a.name === b.name && (a.name !== 'folder' || (b.name === 'folder' && a.id === b.id));
 
 function useWide(): boolean {
   const query = '(min-width: 900px)';
@@ -36,7 +47,7 @@ function useWide(): boolean {
 }
 
 export default function App() {
-  const [route, setRoute] = useState<Route>({ name: 'inbox' });
+  const [route, setRoute] = useState<Route>(INBOX);
   const [history, setHistory] = useState<Route[]>([]);
   const [toast, showToast] = useState<string | null>(null);
   // Пришли записи с другого устройства: экраны перечитывают данные.
@@ -165,7 +176,7 @@ export default function App() {
         document.querySelector('.main')?.scrollTo(0, 0);
       },
       back: () => {
-        setRoute(history[history.length - 1] ?? { name: 'inbox' });
+        setRoute(history[history.length - 1] ?? INBOX);
         setHistory(history.slice(0, -1));
       },
       toast: setToast,
@@ -173,29 +184,33 @@ export default function App() {
     [route, history, setToast],
   );
 
-  const goTab = (id: Route['name']) => {
+  /** Раздел из меню или с нижней панели: история «Назад» начинается заново. */
+  const goTop = (r: Route) => {
     setHistory([]);
-    setRoute({ name: id } as Route);
+    setRoute(r);
     document.querySelector('.main')?.scrollTo(0, 0);
   };
 
   /** Настройки, раздел «Ящики» — открытым. */
   const connect = () => {
     store('cut.accounts', '1');
-    goTab('settings');
+    goTop({ name: 'settings' });
     window.setTimeout(() => document.getElementById('accounts')?.scrollIntoView({ block: 'start' }), 50);
   };
   // Новое письмо — на следующем этапе; пока ящиков нет, писать не с чего.
   const write = () => setToast('Сначала подключите ящик: Настройки → Ящики');
-  const showFab = !wide && (route.name === 'inbox' || route.name === 'folders');
+  const showFab = !wide && route.name !== 'settings';
 
   let body;
   if (!ready) body = <p className="muted">Открываю…</p>;
   else if (route.name === 'settings')
     body = <Settings scheme={scheme} setScheme={setScheme} mode={mode} setMode={setMode} nav={nav} security={security} onSynced={() => setSynced((n) => n + 1)} />;
-  else if (route.name === 'folders') body = <Folders />;
-  else if (route.name === 'search') body = <Search />;
-  else body = <Inbox synced={synced} onConnect={connect} />;
+  else if (route.name === 'folders') body = <Folders wide={wide} onOpen={(id) => nav.go({ name: 'folder', id })} />;
+  else {
+    // На телефоне все папки, кроме «Входящих», открываются из «Папок» — у них сверху «Назад».
+    const back = !wide && route.id !== 'inbox' ? () => (history.length ? nav.back() : goTop({ name: 'folders' })) : undefined;
+    body = <Folder key={route.id} id={route.id} synced={synced} onConnect={connect} onBack={back} />;
+  }
 
   return (
     <div className={wide ? 'app wide' : 'app phone'}>
@@ -206,12 +221,15 @@ export default function App() {
             <Icon name="pen" stroke={2} />
             <span>Написать</span>
           </button>
-          {TABS.map((t) => (
-            <button key={t.id} type="button" className={`navitem${route.name === t.id ? ' on' : ''}`} aria-current={route.name === t.id ? 'page' : undefined} onClick={() => goTab(t.id)}>
-              <Icon name={t.icon} />
-              <span>{t.label}</span>
-            </button>
-          ))}
+          {MENU.map((m) => {
+            const on = same(route, m.route);
+            return (
+              <button key={m.label} type="button" className={`navitem${on ? ' on' : ''}`} aria-current={on ? 'page' : undefined} onClick={() => goTop(m.route)}>
+                <Icon name={m.icon} />
+                <span>{m.label}</span>
+              </button>
+            );
+          })}
         </aside>
       )}
       <main className="main">
@@ -224,12 +242,15 @@ export default function App() {
       )}
       {!wide && (
         <nav className="bottomnav" aria-label="Разделы">
-          {TABS.map((t) => (
-            <button key={t.id} type="button" className={route.name === t.id ? 'on' : ''} aria-current={route.name === t.id ? 'page' : undefined} onClick={() => goTab(t.id)}>
-              <Icon name={t.icon} size={22} stroke={route.name === t.id ? 2 : 1.75} />
-              <span>{t.label}</span>
-            </button>
-          ))}
+          {TABS.map((t) => {
+            const on = tabOf(route) === t.id;
+            return (
+              <button key={t.id} type="button" className={on ? 'on' : ''} aria-current={on ? 'page' : undefined} onClick={() => goTop(t.route)}>
+                <Icon name={t.icon} size={22} stroke={on ? 2 : 1.75} />
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
         </nav>
       )}
       {locked && lock && <LockScreen key={lockKey} status={lock} api={api} names={{ name: NAME, nameAcc: NAME_ACC }} onUnlocked={onUnlocked} />}

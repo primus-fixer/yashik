@@ -10,6 +10,9 @@ use std::path::Path;
 
 pub use kit_core::store::{Event, EventBody, Store};
 
+/// Поиск по почте: словоформы, транслит, раскладка.
+pub mod search;
+
 /// Как «Ящик» называется в сообщениях.
 pub const NAMES: kit_core::AppNames = kit_core::AppNames { id: "yashik", name: "Ящик", name_acc: "Ящик", name_gen: "Ящика", feminine: false };
 

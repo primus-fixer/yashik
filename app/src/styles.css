@@ -1,1 +1,25 @@
 /* Свой вид приложения — поверх общего из kit (@primus-fixer/kit/ui/styles.css). Правила — docs/design.md в kit. */
+
+/* Общие папки на телефоне (экран «Папки»): строки 48 — значок, название, стрелка. */
+
+.folder-list {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--line);
+}
+
+.folder-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 4px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}

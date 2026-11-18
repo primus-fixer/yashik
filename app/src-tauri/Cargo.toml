@@ -18,11 +18,11 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 getrandom = "0.3"
 yashik-core = { path = "../../crates/yashik-core" }
-# Общий модуль kit 0.12.0 (https://github.com/primus-fixer/kit): ключ базы в хранилище системы,
+# Общий модуль kit 0.12.1 (https://github.com/primus-fixer/kit): ключ базы в хранилище системы,
 # вход по PIN-коду, обмен по Wi-Fi и облако в приложении.
-kit-core = { git = "https://github.com/primus-fixer/kit", rev = "50713b7a11d54fb74403666eb6cf63c13e7df514" }
-kit-secure = { git = "https://github.com/primus-fixer/kit", rev = "50713b7a11d54fb74403666eb6cf63c13e7df514" }
-kit-tauri = { git = "https://github.com/primus-fixer/kit", rev = "50713b7a11d54fb74403666eb6cf63c13e7df514" }
+kit-core = { git = "https://github.com/primus-fixer/kit", rev = "8fe923477d34668bbcb09a5c3355457332e78a18" }
+kit-secure = { git = "https://github.com/primus-fixer/kit", rev = "8fe923477d34668bbcb09a5c3355457332e78a18" }
+kit-tauri = { git = "https://github.com/primus-fixer/kit", rev = "8fe923477d34668bbcb09a5c3355457332e78a18" }
 # Облако: страница Яндекс ID, где создают пароль приложения, открывается в браузере.
 tauri-plugin-opener = "2"
 

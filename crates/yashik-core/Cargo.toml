@@ -6,7 +6,9 @@ edition.workspace = true
 publish.workspace = true
 
 [dependencies]
-# Общий модуль kit 0.12.0 (https://github.com/primus-fixer/kit): хранилище записей, обмен по Wi-Fi,
+# Общий модуль kit 0.12.1 (https://github.com/primus-fixer/kit): хранилище записей, обмен по Wi-Fi,
 # облако и формат копий. Ссылка — на коммит версии; когда у kit есть метка, `rev` заменяется на `tag`.
-kit-core = { git = "https://github.com/primus-fixer/kit", rev = "50713b7a11d54fb74403666eb6cf63c13e7df514", features = ["store"] }
+kit-core = { git = "https://github.com/primus-fixer/kit", rev = "8fe923477d34668bbcb09a5c3355457332e78a18", features = ["store"] }
 getrandom = "0.3"
+# Основы слов для поиска (Snowball: русский и английский).
+rust-stemmers = "1.2"
